@@ -1,18 +1,19 @@
 import React from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import GameForm from "@/components/GameForm";
+import gamesService from "@/services/games.service";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 
-export default function Page() {
+import { RouteProp } from "@react-navigation/native";
+
+export default function GamePage({ route }: { route: RouteProp<RootStackParamList, "GamePage"> }) {
   const [errorTxt, setErrorTxt] = useState<string>("");
-
-  const { id } = useLocalSearchParams();
   const [game, setGame] = useState<Game | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
 
-  const router = useRouter();
+  const { id } = route.params!;
+  const navigation = useNavigation<NavigationProp<RootStackParamList, "GamePage">>();
 
   const handleError = (err: any): void => {
     const message = err.response ? err.response.data.error : err.message;
@@ -22,8 +23,13 @@ export default function Page() {
   useEffect(() => {
     (async function getGame(){
       try {
-        const { data } = await axios.get(`https://gamelist-dwa-production.up.railway.app/api/v1/games/${id}`);
-        setGame(data);
+        gamesService.getPrivateGame(id).then(
+          res => {
+            setGame(res.data)
+          }, (error: any) => {
+            console.log(error);
+          }
+        )
       } catch (err: any) {
         console.log(err);
         handleError(err);
@@ -33,9 +39,8 @@ export default function Page() {
   
   const deleteGame = async () => {
     try {
-      await axios.delete(`https://gamelist-dwa-production.up.railway.app/api/v1/games/${id}`);
-      // Sends user back to directory page
-      router.replace("/");
+      gamesService.deletePrivateGame(id);
+      navigation.navigate("Directory");
     } catch(err: any) {
       console.log(err);
       handleError(err);
@@ -45,14 +50,14 @@ export default function Page() {
   if (!game) return null;
 
   return (
-    <>
+    <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>{game.title}</Text>
         <Text style={styles.text}>Release Date: {game.releaseDate}</Text>
         <Text style={styles.text}>Genre: {game.genre}</Text>
         <View style={styles.timestampContaier}>
-          <Text style={styles.subText}>Entry created: {new Date(game.createdAt).toLocaleString()}</Text>
-          <Text style={styles.subText}>Last updated: {new Date(game.updatedAt).toLocaleString()}</Text>
+          <Text style={styles.subText}>Entry created: {new Date(game.createdAt!).toLocaleString()}</Text>
+          <Text style={styles.subText}>Last updated: {new Date(game.updatedAt!).toLocaleString()}</Text>
         </View>
         {errorTxt ? <Text style={styles.error}>{errorTxt}</Text> : null}
         <View style={styles.buttonContainer}>
@@ -64,12 +69,21 @@ export default function Page() {
           </TouchableOpacity>
         </View>
       </View>
+      <View>
+        <TouchableOpacity onPress={() => navigation.navigate("Directory")}>
+          <Text style={styles.backLink}>&#171; Back to directory</Text>
+        </TouchableOpacity>
+      </View>
       {showForm ? <GameForm setShowForm={setShowForm} game={game} refresh={null} setRefresh={null} /> : null}
-    </>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#111",
+    minHeight: "100%"
+  },
   card: {
     backgroundColor: "#222",
     padding: 12,
@@ -120,6 +134,12 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     marginVertical: 16
+  },
+  backLink: {
+    textAlign: "center",
+    textDecorationLine: "underline",
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#f4f4f4"
   }
-
 })

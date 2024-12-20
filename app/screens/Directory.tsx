@@ -1,45 +1,49 @@
 import React from "react";
-import { useState, useCallback } from "react";
-import { Text, View, Button, StyleSheet, FlatList } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { useState, useEffect } from "react";
+import { Text, View, Button, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import GameForm from "@/components/GameForm";
+import gamesService from "@/services/games.service";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 
-export default function Index() {
+export default function Directory() {
   const [games, setGames] = useState<Game[]>();
   const [showForm, setShowForm] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(false);
 
-  // Gets called whenever screen gets focused
-  useFocusEffect(
-    useCallback(() => {
-      (async function getGames() {
-        await fetch("https://gamelist-dwa-production.up.railway.app/api/v1/games")
-          .then(data => data.json())
-          .then(data => setGames(data))
-      })();
-    }, [refresh])
-  );
+  const navigation = useNavigation<NavigationProp<RootStackParamList, "Directory">>();
+
+  useEffect(() => {
+    (async function getGames() {
+      try {
+        gamesService.getAllPrivateGames().then(
+          res => {
+            setGames(res.data)
+          },
+          (error) => {
+            console.log(error);
+          }
+        );
+      } catch (error: any) {
+        console.log(error);
+      }
+    })();
+  }, [refresh]);
 
   return (
-    <>
+    <View style={styles.container}>
       <Button onPress={() => setShowForm(true)} title="+ Add Game" />
       <FlatList
         data={games}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item._id!}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.text}>{item.title}</Text>
-            <Link style={styles.button}
-              href={{
-                pathname: "/games/[id]",
-                params: { id: item._id },
-              }}
-            >
+            <TouchableOpacity style={styles.button} onPress={() => item._id && navigation.navigate("GamePage", { id: item._id })}>
               <Text style={styles.buttonText}>Go to game page</Text>
-            </Link>
+            </TouchableOpacity>
           </View>
         )}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.gamesContainer}
       />
       {showForm ? (
         <GameForm
@@ -49,12 +53,16 @@ export default function Index() {
           setRefresh={setRefresh}
         />
       ) : null}
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#111",
+    minHeight: "100%"
+  },
+  gamesContainer: {
     gap: 16,
     padding: 16,
   },

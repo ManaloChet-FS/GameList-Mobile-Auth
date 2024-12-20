@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useRef, useState } from "react";
 import { TextInput, View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import RNPickerSelect from 'react-native-picker-select';
-import axios from "axios";
+import gamesService from "@/services/games.service";
 
 interface GameFormProps {
   setShowForm: Dispatch<SetStateAction<boolean>>
@@ -11,15 +11,14 @@ interface GameFormProps {
 }
 
 export default function GameForm({ setShowForm, game, refresh, setRefresh }: GameFormProps) {
-  const [errorTxt, setErrorTxt] = useState<string>("");
-
   const titleRef = useRef<string>(game ? game.title : "");
   const releaseDateRef = useRef<string>(game ? game.releaseDate : "");
   const genreRef = useRef<string>(game ? game.genre : "");
 
   const handleError = (err: any): void => {
     const message = err.response ? err.response.data.error : err.message;
-    setErrorTxt(message);
+    const invalidInputs = err.response.data.invalidInputs ? err.response.data.invalidInputs.join(", ") : "";
+    alert(message + " " + invalidInputs);
   }
 
   const handleSubmit = async () => {
@@ -31,29 +30,39 @@ export default function GameForm({ setShowForm, game, refresh, setRefresh }: Gam
 
     // Checks if any inputs are empty
     if (!gameInfo.title || !gameInfo.releaseDate || !gameInfo.genre) {
-      setErrorTxt("Inputs must not be empty!");
+      alert("Inputs must not be empty!");
       return;
     }
 
     if (!game) {
       // Creates game
       try {
-        await axios.post("https://gamelist-dwa-production.up.railway.app/api/v1/games", gameInfo);
-        setRefresh!(!refresh);
-        setShowForm(false);
+        gamesService.createPrivateGame(gameInfo).then(
+          () => {
+            setRefresh!(!refresh);
+            setShowForm(false);
+          },
+          (err) => {
+            handleError(err);
+          }
+        );
       } catch (err: any) {
         handleError(err);
       }
     } else {
       // Updates games
       try {
-        await axios.put(`https://gamelist-dwa-production.up.railway.app/api/v1/games/${game._id}`, gameInfo)
-  
-        game.title = gameInfo.title;
-        game.releaseDate = gameInfo.releaseDate;
-        game.genre = gameInfo.genre;
-
-        setShowForm(false);
+        gamesService.updatePrivateGame(game._id!, gameInfo).then(
+          () => {
+            game.title = gameInfo.title;
+            game.releaseDate = gameInfo.releaseDate;
+            game.genre = gameInfo.genre;
+            setShowForm(false);
+          },
+          (err) => {
+            handleError(err);
+          }
+        );
       } catch (err) {
         handleError(err);
       }
@@ -86,7 +95,6 @@ export default function GameForm({ setShowForm, game, refresh, setRefresh }: Gam
           ]}
         />
       </View>
-      {errorTxt ? <Text style={styles.error}>{errorTxt}</Text> : null}
       <View style={styles.buttonContainer}>
         <TouchableOpacity onPress={handleSubmit} style={styles.button}>
           <Text style={styles.buttonText}>{game ? "Update" : "Create"}</Text>
@@ -102,9 +110,9 @@ export default function GameForm({ setShowForm, game, refresh, setRefresh }: Gam
 const styles = StyleSheet.create({
   formContainer: {
     position: "absolute",
-    top: "50%",
+    top: "25%",
     left: "50%",
-    transform: "translate(-50%, -50%)",
+    transform: "translate(-50%, -25%)",
     backgroundColor: "#16161b",
     padding: 24,
     width: "100%",
