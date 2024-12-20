@@ -110,14 +110,15 @@ export default function GameForm({ setShowForm, game, refresh, setRefresh }: Gam
 const styles = StyleSheet.create({
   formContainer: {
     position: "absolute",
-    top: "25%",
+    top: "50%",
     left: "50%",
-    transform: "translate(-50%, -25%)",
+    transform: "translate(-50%, -50%)",
     backgroundColor: "#16161b",
     padding: 24,
     width: "100%",
     maxWidth: 300,
-    gap: 16
+    gap: 16,
+    zIndex: 100
   },
   label: {
     color: "#f4f4f4",

@@ -58,8 +58,6 @@ export default function Directory() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-  },
   gamesContainer: {
     backgroundColor: "#111",
     gap: 16,
