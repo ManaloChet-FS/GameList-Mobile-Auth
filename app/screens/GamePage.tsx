@@ -68,13 +68,13 @@ export default function GamePage({ route }: { route: RouteProp<RootStackParamLis
             <Text style={styles.buttonText}>Delete</Text>
           </TouchableOpacity>
         </View>
+      {showForm ? <GameForm setShowForm={setShowForm} game={game} refresh={null} setRefresh={null} /> : null}
       </View>
       <View>
         <TouchableOpacity onPress={() => navigation.navigate("Directory")}>
           <Text style={styles.backLink}>&#171; Back to directory</Text>
         </TouchableOpacity>
       </View>
-      {showForm ? <GameForm setShowForm={setShowForm} game={game} refresh={null} setRefresh={null} /> : null}
     </View>
   )
 }
