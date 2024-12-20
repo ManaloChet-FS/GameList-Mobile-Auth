@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { Text, View, Button, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { Text, View, Button, StyleSheet, FlatList, TouchableOpacity, ScrollView } from "react-native";
 import GameForm from "@/components/GameForm";
 import gamesService from "@/services/games.service";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
@@ -30,7 +30,7 @@ export default function Directory() {
   }, [refresh]);
 
   return (
-    <View style={styles.container}>
+    <>
       <Button onPress={() => setShowForm(true)} title="+ Add Game" />
       <FlatList
         data={games}
@@ -53,18 +53,18 @@ export default function Directory() {
           setRefresh={setRefresh}
         />
       ) : null}
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#111",
-    minHeight: "100%"
   },
   gamesContainer: {
+    backgroundColor: "#111",
     gap: 16,
     padding: 16,
+    minHeight: "100%",
   },
   card: {
     backgroundColor: "#222",

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://192.168.50.19:8000/api/v1";
+const API_BASE = "https://gamelist-api-auth-production.up.railway.app/api/v1";
 const API_URL = "games"
 
 const getAllPrivateGames = () => {
